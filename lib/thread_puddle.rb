@@ -1,10 +1,11 @@
 require 'thread'
  
 class ThreadPuddle
-  attr_reader :size
+  attr_reader :size, :state
  
   def initialize size = 24
     @size  = size
+    @state = :running
     @queue = Queue.new
     @pool  = size.times.map do
       Thread.new do
@@ -19,10 +20,16 @@ class ThreadPuddle
   end
  
   def submit *args, &block
-    queue.enq [block, args]
+    if state == :running
+      queue.enq [block, args]
+    else
+      raise "thread pool has been shutdown"
+    end
   end
  
   def shutdown timeout = nil
+    state = :shutting_down
+
     size.times do
       submit do
         throw :exit
@@ -36,12 +43,14 @@ class ThreadPuddle
     end
  
     queue.clear
-    size = 0
+    state = :terminated
+    size  = 0
   end
  
   def status
     {
       :size    => size,
+      :state   => state,
       :threads => pool.map(&:status), 
       :queue   => {
         :size  => queue.size,
