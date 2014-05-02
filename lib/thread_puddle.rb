@@ -1,5 +1,4 @@
 require 'thread'
-require 'securerandom'
  
 class ThreadPuddle
   attr_reader :size, :state
