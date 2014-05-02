@@ -1,4 +1,5 @@
 require 'thread'
+require 'securerandom'
  
 class ThreadPuddle
   attr_reader :size, :state
@@ -11,8 +12,13 @@ class ThreadPuddle
       Thread.new do
         catch :exit do
           loop do
-            job, args = queue.deq
-            job.call *args
+            job, args, result_queue = queue.deq
+
+            if result_queue
+              result_queue.enq job.call *args
+            else # async
+              job.call *args
+            end
           end
         end
       end
@@ -22,6 +28,17 @@ class ThreadPuddle
   def submit *args, &block
     if state == :running
       queue.enq [block, args]
+    else
+      raise "thread pool has been shutdown"
+    end
+  end
+
+  def perform *args, &block
+    if state == :running
+      result_queue = Queue.new
+      queue.enq [block, args, result_queue]
+
+      result_queue.deq
     else
       raise "thread pool has been shutdown"
     end

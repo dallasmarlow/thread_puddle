@@ -1,6 +1,6 @@
 Gem::Specification.new do |gem|
   gem.name          = 'thread_puddle'
-  gem.version       = '0.1.0'
+  gem.version       = '0.1.1'
   gem.authors       = ['Dallas Marlow']
   gem.email         = ['dallasmarlow@gmail.com']
   gem.description   = 'puddles of threads'
